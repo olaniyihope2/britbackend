@@ -75,7 +75,7 @@ const corsOptions = {
     "http://localhost:3002",
     "http://localhost:3003",
     "http://localhost:8081",
-    "https://havilah.edupro.com.ng"
+    "https://portal.britcampus.com"
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
