@@ -28,6 +28,7 @@ import jambsubmitRoute from "./routes/jambsubmitRoute.js";
 import subRoute from "./routes/subRoute.js";
 import markRoute from "./routes/markRoute.js";
 import offlineRoute from "./routes/offlineRoute.js";
+import studentCourseRoute from "./routes/studentCourseRoute.js";
 import OffRoutes from "./routes/OffRoutes.js";
 import psyRoute from "./routes/psyRoute.js";
 import receiptRoute from "./routes/receiptRoute.js";
@@ -121,7 +122,7 @@ app.use(
   "/api/courses",
   courseRoutes
 );
-
+app.use("/api/student/courses", studentCourseRoute);
 
 app.use(
   "/api/course-allocations",
