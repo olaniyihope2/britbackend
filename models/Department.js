@@ -27,6 +27,15 @@ const departmentSchema = new mongoose.Schema(
       enum: ["Active", "Inactive"],
       default: "Active",
     },
+
+    // The staff member who heads this department.
+    // Set/updated automatically when a staff record is
+    // registered or edited with isHOD: true.
+    headOfDepartment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,

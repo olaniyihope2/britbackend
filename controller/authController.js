@@ -10,53 +10,12 @@ import Setting from "../models/settingModel.js";
 import Account from "../models/accountModel.js";
 import Download from "../models/downloadModel.js";
 import Exam from "../models/examModel.js";
+import Department from "../models/Department.js";
+import Programme from "../models/Programme.js";
 
 import Application from "../models/applicationModel.js";
 
-// export const register = async (req, res) => {
-//   try {
-//     const { role, sessionId, ...userData } = req.body;
-//     const { username, password } = userData;
 
-//     console.log("Received registration data:", { role, sessionId, userData });
-
-//     if (!["admin", "staff", "student"].includes(role)) {
-//       return res.status(400).json({ error: "Invalid role" });
-//     }
-
-//     const existingUser = await User.findOne({ username }).exec();
-//     if (existingUser) {
-//       return res.status(400).json({ error: "Username already exists" });
-//     }
-
-//     const session = await Session.findById(sessionId);
-//     if (!session) {
-//       return res.status(400).json({ error: "Invalid session ID" });
-//     }
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     const user = new User({
-//       role,
-//       ...userData,
-//       password: hashedPassword,
-//       session: [sessionId], // session is an array on the new model
-//     });
-
-//     await user.save();
-
-//     const token = jwt.sign(
-//       { userId: user._id, role: user.role },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "12h" }
-//     );
-
-//     return res.status(201).json({ token, user });
-//   } catch (error) {
-//     console.error("Registration error:", error);
-//     return res.status(500).json({ error: "Registration failed" });
-//   }
-// };
 
 export const getMe = async (req, res) => {
   try {
@@ -70,142 +29,7 @@ export const getMe = async (req, res) => {
     return res.status(500).json({ error: "Failed to get user" });
   }
 };
-// export const register = async (req, res) => {
-//   try {
-//     const { role, sessionId, ...userData } = req.body;
-//     const { username, password } = userData;
 
-//     console.log("Received registration data:", { role, sessionId, userData });
-
-//     if (!["admin", "staff", "student"].includes(role)) {
-//       return res.status(400).json({ error: "Invalid role" });
-//     }
-
-//     const existingUser = await User.findOne({ username }).exec();
-//     if (existingUser) {
-//       return res.status(400).json({ error: "Username already exists" });
-//     }
-
-//     let session;
-
-//     if (role === "student") {
-//       // Students don't send a sessionId — auto-enroll into the active session
-//       session = await Session.findOne({ isActive: true }).exec();
-//       if (!session) {
-//         return res.status(400).json({
-//           error: "No active academic session is configured. Contact admissions.",
-//         });
-//       }
-//     } else {
-//       // Admin/staff still need an explicit sessionId
-//       if (!sessionId) {
-//         return res.status(400).json({ error: "sessionId is required" });
-//       }
-//       session = await Session.findById(sessionId).exec();
-//       if (!session) {
-//         return res.status(400).json({ error: "Invalid session ID" });
-//       }
-//     }
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     const user = new User({
-//       role,
-//       ...userData,
-//       password: hashedPassword,
-//       session: [session._id],
-//     });
-
-//     await user.save();
-
-//     const token = jwt.sign(
-//       { userId: user._id, role: user.role },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "12h" }
-//     );
-
-//     return res.status(201).json({ token, user });
-//   } catch (error) {
-//     console.error("Registration error:", error);
-//     return res.status(500).json({ error: "Registration failed" });
-//   }
-// };
-
-
-// export const register = async (req, res) => {
-//   try {
-//     const { role, sessionId, ...userData } = req.body;
-//     const { username, password } = userData;
-
-//     if (!["admin", "staff", "student"].includes(role)) {
-//       return res.status(400).json({ error: "Invalid role" });
-//     }
-
-//     const existingUser = await User.findOne({ username }).exec();
-//     if (existingUser) {
-//       return res.status(400).json({ error: "Username already exists" });
-//     }
-
-//     let session;
-
-//     if (role === "student") {
-//       session = await Session.findOne({ isActive: true }).exec();
-//       if (!session) {
-//         return res.status(400).json({
-//           error: "No active academic session is configured. Contact admissions.",
-//         });
-//       }
-//     } else {
-//       if (!sessionId) {
-//         return res.status(400).json({ error: "sessionId is required" });
-//       }
-//       session = await Session.findById(sessionId).exec();
-//       if (!session) {
-//         return res.status(400).json({ error: "Invalid session ID" });
-//       }
-//     }
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     const user = new User({
-//       role,
-//       ...userData,
-//       password: hashedPassword,
-//       session: [session._id],
-//     });
-
-//     await user.save();
-
-//     // Create the Application record for students only
-//     let application;
-//     if (role === "student") {
-//       const year = new Date().getFullYear();
-//       const countThisYear = await Application.countDocuments({
-//         applicationNumber: { $regex: `^APP-${year}-` },
-//       });
-//       const sequence = String(countThisYear + 1).padStart(6, "0");
-//       const applicationNumber = `APP-${year}-${sequence}`;
-
-//       application = await Application.create({
-//         user: user._id,
-//         session: session._id,
-//         applicationNumber,
-//         programme: userData.programme,
-//       });
-//     }
-
-//     const token = jwt.sign(
-//       { userId: user._id, role: user.role },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "12h" }
-//     );
-
-//     return res.status(201).json({ token, user, application });
-//   } catch (error) {
-//     console.error("Registration error:", error);
-//     return res.status(500).json({ error: "Registration failed" });
-//   }
-// };
 
 export const register = async (req, res) => {
   try {
@@ -937,32 +761,50 @@ export const createAccount = async (req, res) => {
 
 // ---------- all staff for admin ----------
 
+// export const getAllStaff = async (req, res) => {
+//   try {
+//     const staff = await User.find({ role: "staff" })
+//       .select(
+//       "_id staffId username email phone gender birthday address staffRole department subjectTaught employmentType session createdAt updatedAt role"
+
+//       )
+//       .populate("session", "name isActive")
+//       .sort({ createdAt: -1 })
+//       .lean();
+
+//     return res.status(200).json({
+//       success: true,
+//       count: staff.length,
+//       staff,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching all staff:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch staff",
+//     });
+//   }
+// };
+
 export const getAllStaff = async (req, res) => {
   try {
     const staff = await User.find({ role: "staff" })
       .select(
-      "_id staffId username email phone gender birthday address staffRole department subjectTaught employmentType session createdAt updatedAt role"
-
+        "_id staffId username email phone gender birthday address staffRole department programme isHOD subjectTaught employmentType session createdAt updatedAt role"
       )
+      .populate("department", "name code")
+      .populate("programme", "name code")
       .populate("session", "name isActive")
       .sort({ createdAt: -1 })
       .lean();
 
-    return res.status(200).json({
-      success: true,
-      count: staff.length,
-      staff,
-    });
+    return res.status(200).json({ success: true, count: staff.length, staff });
   } catch (error) {
     console.error("Error fetching all staff:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch staff",
-    });
+    return res.status(500).json({ success: false, message: "Failed to fetch staff" });
   }
 };
-
 export const registerStaff = async (req, res) => {
   try {
     const {
@@ -971,8 +813,10 @@ export const registerStaff = async (req, res) => {
       email,
       phone,
       staffType,
-      department,
       staffRole,
+      department,   // Department _id — required
+      programme,    // Programme _id — required unless isHOD
+      isHOD,
       employmentType,
       employmentDate,
       status,
@@ -985,7 +829,7 @@ export const registerStaff = async (req, res) => {
     } = req.body;
 
     // ==================================================
-    // VALIDATION
+    // BASIC VALIDATION
     // ==================================================
 
     if (
@@ -1005,14 +849,57 @@ export const registerStaff = async (req, res) => {
     }
 
     // ==================================================
+    // DEPARTMENT MUST EXIST
+    // ==================================================
+
+    const departmentDoc = await Department.findById(department);
+    if (!departmentDoc) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid department.",
+      });
+    }
+
+    // ==================================================
+    // PROGRAMME REQUIRED UNLESS HOD, AND MUST BELONG
+    // TO THE CHOSEN DEPARTMENT
+    // ==================================================
+
+    let programmeDoc = null;
+
+    if (!isHOD) {
+      if (!programme) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Programme is required for non-HOD staff.",
+        });
+      }
+
+      programmeDoc = await Programme.findById(programme);
+
+      if (!programmeDoc) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid programme.",
+        });
+      }
+
+      if (String(programmeDoc.department) !== String(department)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "That programme does not belong to the selected department.",
+        });
+      }
+    }
+
+    // ==================================================
     // CHECK EXISTING EMAIL
     // ==================================================
 
     const normalizedEmail = email.toLowerCase().trim();
-
-    const existingUser = await User.findOne({
-      email: normalizedEmail,
-    });
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return res.status(409).json({
@@ -1023,7 +910,6 @@ export const registerStaff = async (req, res) => {
 
     // ==================================================
     // GENERATE USERNAME
-    // Example: johnsmith
     // ==================================================
 
     const baseUsername = `${firstName}${lastName}`
@@ -1031,7 +917,6 @@ export const registerStaff = async (req, res) => {
       .toLowerCase();
 
     let username = baseUsername;
-
     let counter = 1;
 
     while (await User.findOne({ username })) {
@@ -1040,44 +925,31 @@ export const registerStaff = async (req, res) => {
     }
 
     // ==================================================
-    // GENERATE STAFF ID
-    // Example: STF/2026/001
+    // GENERATE STAFF ID — STF/2026/001
     // ==================================================
 
     const year = new Date().getFullYear();
 
     const lastStaff = await User.findOne({
       role: "staff",
-      staffId: {
-        $regex: `^STF/${year}/`,
-      },
+      staffId: { $regex: `^STF/${year}/` },
     })
       .sort({ staffId: -1 })
       .lean();
 
     let nextNumber = 1;
-
     if (lastStaff?.staffId) {
-      const parts = lastStaff.staffId.split("/");
-      const lastNumber = Number(parts[2]);
-
-      if (!Number.isNaN(lastNumber)) {
-        nextNumber = lastNumber + 1;
-      }
+      const lastNumber = Number(lastStaff.staffId.split("/")[2]);
+      if (!Number.isNaN(lastNumber)) nextNumber = lastNumber + 1;
     }
 
-    const staffId = `STF/${year}/${String(
-      nextNumber
-    ).padStart(3, "0")}`;
+    const staffId = `STF/${year}/${String(nextNumber).padStart(3, "0")}`;
 
     // ==================================================
     // HASH PASSWORD
     // ==================================================
 
-    const hashedPassword = await bcrypt.hash(
-      password,
-      10
-    );
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // ==================================================
     // CREATE STAFF
@@ -1085,82 +957,48 @@ export const registerStaff = async (req, res) => {
 
     const staff = await User.create({
       staffId,
-
       username,
-
       fullname: `${firstName.trim()} ${lastName.trim()}`,
-
       email: normalizedEmail,
-
       password: hashedPassword,
-
       role: "staff",
-
       phone: phone.trim(),
-
       gender: gender || undefined,
-
       birthday: birthday || undefined,
-
       address: address || undefined,
-
       staffType: staffType || "Non-Academic Staff",
-
       staffRole,
-
-      department,
-
+      department: departmentDoc._id,
+      programme: isHOD ? undefined : programmeDoc._id,
+      isHOD: Boolean(isHOD),
       subjectTaught:
-        staffType === "Lecturer"
-          ? subjectTaught || undefined
-          : undefined,
-
-      employmentType:
-        employmentType || "Full-time",
-
-      employmentDate:
-        employmentDate || undefined,
-
+        staffType === "Lecturer" ? subjectTaught || undefined : undefined,
+      employmentType: employmentType || "Full-time",
+      employmentDate: employmentDate || undefined,
       status: status || "Active",
-
       session: session || undefined,
     });
 
     // ==================================================
-    // RETURN CREATED STAFF
+    // IF HOD, LINK THEM ON THE DEPARTMENT RECORD
     // ==================================================
 
-    const createdStaff = await User.findById(
-      staff._id
-    )
+    if (isHOD) {
+      departmentDoc.headOfDepartment = staff._id;
+      await departmentDoc.save();
+    }
+
+    // ==================================================
+    // RETURN CREATED STAFF (populated for the UI)
+    // ==================================================
+
+    const createdStaff = await User.findById(staff._id)
       .select(
-        `
-        _id
-        staffId
-        username
-        fullname
-        email
-        phone
-        gender
-        birthday
-        address
-        staffType
-        staffRole
-        department
-        subjectTaught
-        employmentType
-        employmentDate
-        status
-        session
-        createdAt
-        updatedAt
-        role
-        `
+        "_id staffId username fullname email phone gender birthday address staffType staffRole department programme isHOD subjectTaught employmentType employmentDate status session createdAt updatedAt role"
       )
-      .populate(
-        "session",
-        "name isActive"
-      )
+      .populate("department", "name code")
+      .populate("programme", "name code")
+      .populate("session", "name isActive")
       .lean();
 
     return res.status(201).json({
@@ -1169,16 +1007,10 @@ export const registerStaff = async (req, res) => {
       staff: createdStaff,
     });
   } catch (error) {
-    console.error(
-      "Error registering staff:",
-      error
-    );
-
+    console.error("Error registering staff:", error);
     return res.status(500).json({
       success: false,
-      message:
-        error.message ||
-        "Failed to register staff.",
+      message: error.message || "Failed to register staff.",
     });
   }
 };
