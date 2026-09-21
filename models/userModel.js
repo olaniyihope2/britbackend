@@ -112,12 +112,15 @@ const userSchema = new mongoose.Schema(
       default: "Active",
     },
 
+
     // ---------- student-specific ----------
     studentName: { type: String },
     matricNo: { type: String },
     level: { type: String, enum: ["ND1", "ND2"] },
     studyMode: { type: String, enum: ["full-time", "part-time"] },
-
+   isNewStudent: { type: Boolean, default: false },
+   isInternational: { type: Boolean, default: false },
+   scholarship: { type: String, enum: ["none", "half", "full"], default: "none" },
     // Shared by staff (the programme they teach under) and students
     // (the programme they're enrolled in) — now a real reference.
     programme: {

@@ -22,6 +22,7 @@ import teRoute from "./routes/teRoute.js";
 import parentRoute from "./routes/parentRoute.js";
 import commonRoute from "./routes/commonRoute.js";
 import questionRoute from "./routes/questionRoute.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 import jambsubjectRoute from "./routes/jambsubjectRoute.js";
 import examRoute from "./routes/examRoute.js";
 import jambsubmitRoute from "./routes/jambsubmitRoute.js";
@@ -116,6 +117,10 @@ app.use(
 app.use(
   "/api/programmes",
   programmeRoutes
+);
+app.use(
+  "/api/payments",
+  paymentRoutes
 );
 
 app.use(
