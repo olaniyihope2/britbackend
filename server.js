@@ -8,6 +8,7 @@ import jambAuthRoute from "./routes/jambAuthRoute.js";
 import adRoutes from "./routes/adRoutes.js";
 import aiRoute from "./routes/aiRoute.js";
 import examlistRoute from "./routes/examlistRoute.js";
+import courseMaterialRoute   from "./routes/courseMaterialRoute.js";
 import credentialRoute from "./routes/credentialRoute.js";
 import jambRoute from "./routes/jambRoute.js";
 import gradeRoute from "./routes/gradeRoute.js";
@@ -134,6 +135,7 @@ app.use(
   "/api/course-allocations",
   courseAllocationRoutes
 );
+app.use("/api/course-materials", courseMaterialRoute);
 app.use("/api", credentialRoute);
 app.use("/api/", offlineRoute);
 app.use("/api/ad", adRoutes);

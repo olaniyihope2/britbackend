@@ -9,7 +9,7 @@ import Programme from
 
 import AcademicSession from
   "../models/AcademicSession.js";
-
+import mongoose from "mongoose";
 
 /* =====================================================
    ASSIGN COURSE TO STAFF
@@ -458,35 +458,66 @@ export const getMyCourseAllocations = async (req, res) => {
   }
 };
 
+// export const getCourseAllocationById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     const allocation = await CourseAllocation.findById(id)
+//       .populate("staff")
+//       .populate("course")
+//       .populate("programme")
+//       .populate("academicSession");
+
+//     if (!allocation) {
+//       return res.status(404).json({
+//         message: "Course allocation not found",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       allocation,
+//     });
+
+//   } catch (error) {
+//     console.error("Get course allocation error:", error);
+
+//     return res.status(500).json({
+//       message: "Failed to load course allocation",
+//       error: error.message,
+//     });
+//   }
+// };
+
 export const getCourseAllocationById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const allocation = await CourseAllocation.findById(id)
-      .populate("staff")
-      .populate("course")
-      .populate("programme")
-      .populate("academicSession");
-
-    if (!allocation) {
-      return res.status(404).json({
-        message: "Course allocation not found",
-      });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid allocation ID" });
     }
 
-    return res.status(200).json({
-      allocation,
-    });
+    const allocation = await CourseAllocation.findById(id)
+      .populate("staff", "firstName lastName name username email")
+      .populate("course", "code title credits level semester")
+      .populate("programme", "name code")
+      .populate("academicSession", "name currentSemester isActive startDate endDate");
+console.log("academicSession:", allocation.academicSession);
+console.log("ref used:", CourseAllocation.schema.path("academicSession").options.ref);
+console.log("registered models:", mongoose.modelNames());
+    if (!allocation) {
+      return res.status(404).json({ message: "Course allocation not found" });
+    }
 
+    return res.status(200).json({ allocation });
   } catch (error) {
     console.error("Get course allocation error:", error);
-
     return res.status(500).json({
       message: "Failed to load course allocation",
       error: error.message,
     });
   }
 };
+
 export const updateCourseAllocation =
   async (req, res) => {
     try {

@@ -44,7 +44,7 @@ const courseAllocationSchema =
       academicSession: {
         type:
           mongoose.Schema.Types.ObjectId,
-        ref: "AcademicSession",
+ ref: "Session", 
         required: true,
       },
 
