@@ -38,6 +38,11 @@ import {
   submitAssignment,
   downloadStudentAttachment,
 } from "../controller/studentAssignmentController.js";
+import {
+  getSubmissions,
+  downloadSubmissionFile,
+  gradeSubmission,
+} from "../controller/lecturerSubmissionController.js";
 
 const router = express.Router();
 
@@ -45,6 +50,10 @@ const router = express.Router();
 router.get("/student/list", authenticateUser, getStudentAssignments);
 router.get("/student/:id/attachment", authenticateUser, downloadStudentAttachment);
 router.post("/student/:id/submit", authenticateUser, uploadAssignmentFile, submitAssignment);
+
+router.get("/:id/submissions", authenticateUser, flagAdmin, getSubmissions);
+router.get("/:id/submissions/:submissionId/file", authenticateUser, flagAdmin, downloadSubmissionFile);
+router.patch("/:id/submissions/:submissionId/grade", authenticateUser, flagAdmin, gradeSubmission);
 
 /* Lecturer / admin routes */
 router.get("/mine", authenticateUser, flagAdmin, getMyAssignments);

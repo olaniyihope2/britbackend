@@ -10,6 +10,7 @@ import aiRoute from "./routes/aiRoute.js";
 import examlistRoute from "./routes/examlistRoute.js";
 import courseMaterialRoute   from "./routes/courseMaterialRoute.js";
 import credentialRoute from "./routes/credentialRoute.js";
+import liveClassRoute from "./routes/liveClassRoute.js";
 import assignmentRoute from "./routes/assignmentRoute.js";
 import jambRoute from "./routes/jambRoute.js";
 import gradeRoute from "./routes/gradeRoute.js";
@@ -137,6 +138,8 @@ app.use(
   "/api/course-allocations",
   courseAllocationRoutes
 );
+
+  app.use("/api/live", liveClassRoute);
 app.use("/api/course-materials", courseMaterialRoute);
 app.use("/api", credentialRoute);
 app.use("/api/", offlineRoute);
