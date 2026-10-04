@@ -10,6 +10,7 @@ import aiRoute from "./routes/aiRoute.js";
 import examlistRoute from "./routes/examlistRoute.js";
 import courseMaterialRoute   from "./routes/courseMaterialRoute.js";
 import credentialRoute from "./routes/credentialRoute.js";
+import assignmentRoute from "./routes/assignmentRoute.js";
 import jambRoute from "./routes/jambRoute.js";
 import gradeRoute from "./routes/gradeRoute.js";
 import pinRoute from "./routes/pinRoute.js";
@@ -129,6 +130,7 @@ app.use(
   "/api/courses",
   courseRoutes
 );
+app.use("/api/assignments", assignmentRoute);
 app.use("/api/student/courses", studentCourseRoute);
 
 app.use(
