@@ -3,15 +3,11 @@ import mongoose from "mongoose";
 
 const courseRegistrationSchema = new mongoose.Schema(
   {
-    student: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    student: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
-    programme: {
+    department: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Programme",
+      ref: "Department",
       required: true,
     },
 
@@ -32,22 +28,10 @@ const courseRegistrationSchema = new mongoose.Schema(
       required: true,
     },
 
-    courses: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
-      },
-    ],
+    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
 
-    totalUnits: {
-      type: Number,
-      required: true,
-    },
-
-    totalAmount: {
-      type: Number,
-      required: true,
-    },
+    totalUnits: { type: Number, required: true },
+    totalAmount: { type: Number, required: true },
 
     status: {
       type: String,
@@ -56,13 +40,9 @@ const courseRegistrationSchema = new mongoose.Schema(
     },
 
     // Filled in after a successful payment
-    paymentReference: {
-      type: String,
-    },
+    paymentReference: { type: String },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 /*
@@ -73,9 +53,4 @@ courseRegistrationSchema.index(
   { unique: true }
 );
 
-const CourseRegistration = mongoose.model(
-  "CourseRegistration",
-  courseRegistrationSchema
-);
-
-export default CourseRegistration;
+export default mongoose.model("CourseRegistration", courseRegistrationSchema);

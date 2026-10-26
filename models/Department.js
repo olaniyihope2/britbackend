@@ -2,33 +2,20 @@ import mongoose from "mongoose";
 
 const departmentSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true,
-    },
+    name: { type: String, required: true, trim: true, unique: true },
+    code: { type: String, required: true, trim: true, uppercase: true, unique: true },
+    description: { type: String, default: "" },
 
-    code: {
+    // Absorbed from the old Programme model
+    qualification: {
       type: String,
-      required: true,
-      trim: true,
-      uppercase: true,
-      unique: true,
+      enum: ["ND", "HND", "Certificate", "Diploma", "Short Course"],
+      default: "ND",
     },
+    duration: { type: String, default: "2 Years" },
 
-    description: {
-      type: String,
-      default: "",
-    },
+    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
 
-    status: {
-      type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
-    },
-
-    // The staff member who heads this department.
     // Set/updated automatically when a staff record is
     // registered or edited with isHOD: true.
     headOfDepartment: {
@@ -37,14 +24,7 @@ const departmentSchema = new mongoose.Schema(
       default: null,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Department = mongoose.model(
-  "Department",
-  departmentSchema
-);
-
-export default Department;
+export default mongoose.model("Department", departmentSchema);

@@ -11,7 +11,7 @@ import Account from "../models/accountModel.js";
 import Download from "../models/downloadModel.js";
 import Exam from "../models/examModel.js";
 import Department from "../models/Department.js";
-import Programme from "../models/Programme.js";
+
 
 import Application from "../models/applicationModel.js";
 
@@ -90,7 +90,7 @@ export const register = async (req, res) => {
         user: user._id,
         session: session._id,
         applicationNumber,
-        programme: userData.programme,
+        department: departmentDoc._id,
       });
       console.log("[register] Application created:", application._id.toString(), applicationNumber);
     } else {
@@ -423,25 +423,28 @@ export const getStudentsBySession = async (req, res) => {
 };
 
 // Replaces getStudentsByClass — now scoped by programme + level
-export const getStudentsByProgramme = async (req, res) => {
-  const { programme, level, sessionId } = req.params;
+export const getStudentsByDepartment = async (req, res) => {
+  const { department, level, sessionId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(department)) {
+    return res.status(400).json({ error: "Invalid department ID" });
+  }
 
   try {
     const students = await User.find({
       role: "student",
-      programme,
+      department,
       level,
       session: sessionId,
     })
-      .select(
-        "matricNo studentName address phone email programme level studyMode _id"
-      )
+      .select("matricNo studentName address phone email department level studyMode _id")
+      .populate("department", "name code")
       .exec();
 
     if (students.length === 0) {
       return res
         .status(404)
-        .json({ error: "No students found in that programme/level and session" });
+        .json({ error: "No students found in that department/level and session" });
     }
 
     return res.status(200).json(students);

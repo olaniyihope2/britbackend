@@ -4,7 +4,7 @@ const assignmentSchema = new mongoose.Schema(
   {
     allocation: { type: mongoose.Schema.Types.ObjectId, ref: "CourseAllocation", required: true, index: true },
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
-    programme: { type: mongoose.Schema.Types.ObjectId, ref: "Programme" },
+department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
     academicSession: { type: mongoose.Schema.Types.ObjectId, ref: "Session" }, // "Session", not "AcademicSession"
     level: { type: String },
     semester: { type: String },

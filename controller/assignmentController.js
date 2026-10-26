@@ -27,7 +27,7 @@ const parseMarks = (value) => {
 const withRefs = (query) =>
   query
     .populate("course", "code title")
-    .populate("programme", "name code")
+    .populate("department", "name code")
     .populate("academicSession", "name");
 
 // Never expose the S3 key to the browser
@@ -95,7 +95,7 @@ export const getMyAssignments = async (req, res) => {
       status: "Active",
     })
       .populate("course", "code title credits")
-      .populate("programme", "name code")
+       .populate("department", "name code")
       .populate("academicSession", "name")
       .sort({ createdAt: -1 });
 
@@ -155,7 +155,7 @@ export const createAssignment = async (req, res) => {
     const assignment = await Assignment.create({
       allocation: allocation._id,
       course: allocation.course,
-      programme: allocation.programme,
+     department: allocation.department,
       academicSession: allocation.academicSession,
       level: allocation.level,
       semester: allocation.semester,

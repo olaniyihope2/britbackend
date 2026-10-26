@@ -1,88 +1,45 @@
 import mongoose from "mongoose";
 
-const courseAllocationSchema =
-  new mongoose.Schema(
-    {
-      staff: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
+const courseAllocationSchema = new mongoose.Schema(
+  {
+    staff: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
 
-      course: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
-        required: true,
-      },
-
-      programme: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Programme",
-        required: true,
-      },
-
-      level: {
-        type: String,
-        enum: [
-          "ND 1",
-          "ND 2",
-          "HND 1",
-          "HND 2",
-        ],
-        required: true,
-      },
-
-      semester: {
-        type: String,
-        enum: [
-          "First Semester",
-          "Second Semester",
-        ],
-        required: true,
-      },
-
-      academicSession: {
-        type:
-          mongoose.Schema.Types.ObjectId,
- ref: "Session", 
-        required: true,
-      },
-
-      status: {
-        type: String,
-        enum: [
-          "Active",
-          "Inactive",
-        ],
-        default: "Active",
-      },
+    department: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
+      required: true,
     },
-    {
-      timestamps: true,
-    }
-  );
 
+    level: {
+      type: String,
+      enum: ["ND 1", "ND 2", "HND 1", "HND 2"],
+      required: true,
+    },
 
-/*
- Prevent duplicate lecturer assignment
-*/
+    semester: {
+      type: String,
+      enum: ["First Semester", "Second Semester"],
+      required: true,
+    },
 
-courseAllocationSchema.index(
-  {
-    staff: 1,
-    course: 1,
-    academicSession: 1,
+    academicSession: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Session",
+      required: true,
+    },
+
+    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
   },
-  {
-    unique: true,
-  }
+  { timestamps: true }
 );
 
+/*
+  Prevent duplicate lecturer assignment
+*/
+courseAllocationSchema.index(
+  { staff: 1, course: 1, academicSession: 1 },
+  { unique: true }
+);
 
-const CourseAllocation =
-  mongoose.model(
-    "CourseAllocation",
-    courseAllocationSchema
-  );
-
-export default CourseAllocation;
+export default mongoose.model("CourseAllocation", courseAllocationSchema);

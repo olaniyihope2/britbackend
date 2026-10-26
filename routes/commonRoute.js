@@ -8,7 +8,7 @@ import {
   getStudentById,
   getStudentByIdBySession,
   getStudentsBySession,
-  getStudentsByProgramme,
+  getStudentsByDepartment,
   getStaffById,
   updateStaffById,
   getAdmin,
@@ -74,11 +74,7 @@ router.post(
   router.get("/students/:id", authenticateUser, getStudentById);
   router.get("/get-students/:id/:sessionId", authenticateUser, getStudentByIdBySession);
   router.get("/students-session/:sessionId", authenticateUser, getStudentsBySession);
-  router.get(
-    "/students-programme/:programme/:level/:sessionId",
-    authenticateUser,
-    getStudentsByProgramme
-  );
+router.get("/students/:department/:level/:sessionId", getStudentsByDepartment);
   router.get("/staff", authenticateUser, getAllStaff);
   router.get("/me", authenticateUser, getMe);
   router.get("/staff/:id", authenticateUser, getStaffById);

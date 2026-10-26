@@ -2,24 +2,8 @@ import mongoose from "mongoose";
 
 const courseSchema = new mongoose.Schema(
   {
-    code: {
-      type: String,
-      required: true,
-      trim: true,
-      uppercase: true,
-    },
-
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    programme: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Programme",
-      required: true,
-    },
+    code: { type: String, required: true, trim: true, uppercase: true },
+    title: { type: String, required: true, trim: true },
 
     department: {
       type: mongoose.Schema.Types.ObjectId,
@@ -29,78 +13,41 @@ const courseSchema = new mongoose.Schema(
 
     level: {
       type: String,
-      enum: [
-        "ND 1",
-        "ND 2",
-        "HND 1",
-        "HND 2",
-      ],
+      enum: ["ND 1", "ND 2", "HND 1", "HND 2"],
       required: true,
     },
 
     semester: {
       type: String,
-      enum: [
-        "First Semester",
-        "Second Semester",
-      ],
+      enum: ["First Semester", "Second Semester"],
       required: true,
     },
 
-    credits: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 12,
-      default: 3,
-    },
+    credits: { type: Number, required: true, min: 1, max: 12, default: 3 },
 
     type: {
       type: String,
-      enum: [
-        "Compulsory",
-        "Elective",
-      ],
+      enum: ["Compulsory", "Elective"],
       default: "Compulsory",
     },
 
     status: {
       type: String,
-      enum: [
-        "Approved",
-        "Draft",
-        "Inactive",
-      ],
+      enum: ["Approved", "Draft", "Inactive"],
       default: "Draft",
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
-
 
 /*
-  Same course code can exist in different programmes,
-  but cannot be duplicated within the same programme,
-  level and semester.
+  The same course code can exist in different departments (e.g. a general
+  course like GNS 101), but cannot be duplicated within the same
+  department, level and semester.
 */
-
 courseSchema.index(
-  {
-    code: 1,
-    programme: 1,
-    level: 1,
-    semester: 1,
-  },
-  {
-    unique: true,
-  }
+  { code: 1, department: 1, level: 1, semester: 1 },
+  { unique: true }
 );
 
-const Course = mongoose.model(
-  "Course",
-  courseSchema
-);
-
-export default Course;
+export default mongoose.model("Course", courseSchema);

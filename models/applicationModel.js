@@ -6,9 +6,9 @@ const applicationSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     session: { type: mongoose.Schema.Types.ObjectId, ref: "Session", required: true },
     applicationNumber: { type: String, required: true, unique: true },
- programme: {
+department: {
   type: mongoose.Schema.Types.ObjectId,
-  ref: "Programme",
+  ref: "Department",
   required: true,
 },
 

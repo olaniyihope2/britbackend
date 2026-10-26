@@ -22,11 +22,11 @@ const liveClassSchema = new mongoose.Schema(
   {
     allocation: { type: mongoose.Schema.Types.ObjectId, ref: "CourseAllocation", required: true },
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
-    programme: { type: mongoose.Schema.Types.ObjectId, ref: "Programme" },
-    academicSession: { type: mongoose.Schema.Types.ObjectId, ref: "AcademicSession" },
+    department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
+    academicSession: { type: mongoose.Schema.Types.ObjectId, ref: "Session" },
     level: String,
     semester: String,
-    createdBy: { type: mongoose.Schema.Types.ObjectId, required: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
