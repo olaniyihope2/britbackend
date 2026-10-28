@@ -7,6 +7,12 @@ const courseMaterialSchema = new mongoose.Schema(
     uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
     title: { type: String, required: true, trim: true },
+     semester: {
+      type: String,
+      enum: ["First", "Second"],
+      required: true,
+      default: "First",
+    },
     description: { type: String, trim: true, default: "" },
     category: {
       type: String,

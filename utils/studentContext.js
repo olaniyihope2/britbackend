@@ -38,7 +38,7 @@ export const normaliseSemester = (value) => {
 
 /*
   Finds the logged-in student. req.user comes from your protect middleware.
-  requireAcademic = true also demands a programme and level (needed for
+  requireAcademic = true also demands a department and level (needed for
   course registration, not for paying fees).
 */
 export const getStudent = async (req, { requireAcademic = false } = {}) => {
@@ -48,7 +48,8 @@ export const getStudent = async (req, { requireAcademic = false } = {}) => {
     throw new HttpError(401, "You are not logged in");
   }
 
-  const student = await User.findById(id).populate("programme", "name");
+  // ✅ FIXED: Changed from "programme" to "department"
+  const student = await User.findById(id).populate("department", "name");
 
   if (!student || student.role !== "student") {
     throw new HttpError(403, "Only students can do this");
@@ -57,10 +58,11 @@ export const getStudent = async (req, { requireAcademic = false } = {}) => {
   const level = normaliseLevel(student.level);
 
   if (requireAcademic) {
-    if (!student.programme) {
+    // ✅ FIXED: Changed from student.programme to student.department
+    if (!student.department) {
       throw new HttpError(
         400,
-        "Your programme has not been set. Please contact the admin office."
+        "Your department has not been set. Please contact the admin office."
       );
     }
 
@@ -71,6 +73,11 @@ export const getStudent = async (req, { requireAcademic = false } = {}) => {
       );
     }
   }
+
+  console.log("✅ [getStudent] Student loaded successfully");
+  console.log("   - Name:", student.studentName || student.username);
+  console.log("   - Department:", student.department?.name || "Not set");
+  console.log("   - Level:", level);
 
   return { student, level };
 };
@@ -103,6 +110,10 @@ export const getSession = async (student) => {
   const semester =
     normaliseSemester(session.currentSemester || session.semester) ||
     DEFAULT_SEMESTER;
+
+  console.log("✅ [getSession] Session loaded");
+  console.log("   - Session:", name);
+  console.log("   - Semester:", semester);
 
   return { name, semester };
 };

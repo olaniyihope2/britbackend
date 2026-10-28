@@ -18,7 +18,7 @@ department: {
       default: "Pending",
     },
 
-    applicationFee: { type: Number, default: 10000 },
+    applicationFee: { type: Number, default: 5000 },
     applicationFeePaid: { type: Boolean, default: false },
     applicationFeePaidAt: { type: Date },
 

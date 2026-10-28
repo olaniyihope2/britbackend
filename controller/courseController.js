@@ -1,5 +1,5 @@
 import Course from "../models/Course.js";
-import Programme from "../models/Programme.js";
+import Department from "../models/Department.js";
 
 
 /* =====================================================
@@ -12,7 +12,7 @@ export const createCourse = async (req, res) => {
     const {
       code,
       title,
-      programme,
+      department,  // ✅ CHANGED: programme → department
       level,
       semester,
       credits,
@@ -20,34 +20,31 @@ export const createCourse = async (req, res) => {
       status,
     } = req.body;
 
-    if (
-      !code ||
-      !title ||
-      !programme ||
-      !level ||
-      !semester
-    ) {
+    // ✅ FIXED: Now validating the right variable
+    if (!code || !title || !department || !level || !semester) {
       return res.status(400).json({
         success: false,
         message:
-          "Code, title, programme, level and semester are required",
+          "Code, title, department, level and semester are required",  // ✅ CHANGED: programme → department
       });
     }
 
-    const programmeExists =
-      await Programme.findById(programme);
+    // ✅ CHANGED: Programme → Department
+    const departmentExists =
+      await Department.findById(department);
 
-    if (!programmeExists) {
+    if (!departmentExists) {
       return res.status(404).json({
         success: false,
-        message: "Programme not found",
+        message: "Department not found",  // ✅ CHANGED: Programme → Department
       });
     }
 
+    // ✅ CHANGED: programme → department
     const existingCourse =
       await Course.findOne({
         code: code.toUpperCase(),
-        programme,
+        department,  // ✅ CHANGED: programme → department
         level,
         semester,
       });
@@ -56,42 +53,26 @@ export const createCourse = async (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "This course already exists for this programme, level and semester",
+          "This course already exists for this department, level and semester",  // ✅ CHANGED: programme → department
       });
     }
 
+    // ✅ department is now properly defined
     const course =
       await Course.create({
         code: code.toUpperCase(),
-
         title,
-
-        programme,
-
-        department:
-          programmeExists.department,
-
+        department,
         level,
-
         semester,
-
         credits,
-
         type,
-
         status,
       });
 
     const populatedCourse =
       await Course.findById(course._id)
-        .populate(
-          "programme",
-          "name code qualification"
-        )
-        .populate(
-          "department",
-          "name code"
-        );
+        .populate("department", "name code qualification");
 
     res.status(201).json({
       success: true,
@@ -118,7 +99,7 @@ export const getCourses = async (req, res) => {
   try {
 
     const {
-      programme,
+     
       department,
       level,
       semester,
@@ -127,9 +108,7 @@ export const getCourses = async (req, res) => {
 
     const filter = {};
 
-    if (programme) {
-      filter.programme = programme;
-    }
+  
 
     if (department) {
       filter.department = department;
@@ -149,13 +128,10 @@ export const getCourses = async (req, res) => {
 
     const courses =
       await Course.find(filter)
-        .populate(
-          "programme",
-          "name code qualification"
-        )
+      
         .populate(
           "department",
-          "name code"
+          "name code qualification"
         )
         .sort({
           level: 1,
@@ -189,13 +165,10 @@ export const getCourse = async (req, res) => {
 
     const course =
       await Course.findById(req.params.id)
-        .populate(
-          "programme",
-          "name code qualification"
-        )
+      
         .populate(
           "department",
-          "name code"
+          "name code qualification"
         );
 
     if (!course) {
@@ -237,13 +210,10 @@ export const updateCourse = async (req, res) => {
           runValidators: true,
         }
       )
-        .populate(
-          "programme",
-          "name code qualification"
-        )
+      
         .populate(
           "department",
-          "name code"
+          "name code qualification"
         );
 
     if (!course) {

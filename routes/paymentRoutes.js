@@ -6,7 +6,8 @@ import {
   initializePayment,
   verifyPayment,
   verifyApplicationFeePayment,
-  initializeApplicationFeePayment
+  initializeApplicationFeePayment,
+  initializeAcceptanceFeePayment
 } from "../controller/paymentController.js";
 
 import protect from "../middleware/authMiddleware.js";
@@ -21,6 +22,7 @@ router.post(
   protect,
   initializeApplicationFeePayment
 );
+router.post("/acceptance-fee/:applicationId", protect, initializeAcceptanceFeePayment);
 
 router.get(
   "/application-fee/verify/:reference",

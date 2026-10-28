@@ -225,6 +225,7 @@ export const getApplicationById = async (req, res) => {
     })
       .populate("session", "name currentSemester")
       .populate("department", "name code qualification duration")
+       .populate("user", "studentName email phone username")
       .exec();
 
     if (!application) {

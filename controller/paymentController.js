@@ -22,18 +22,125 @@ import { getFeeStatus } from "../services/feeService.js";
 ===================================================== */
 
 
-const markApplicationPaid = async (payment) => {
-  if (
-    payment.status === "success" &&
-    payment.feeCode === "APPLICATION_FEE" &&
-    payment.application
-  ) {
+// const markApplicationPaid = async (payment) => {
+//   if (
+//     payment.status === "success" &&
+//     payment.feeCode === "APPLICATION_FEE" &&
+//     payment.application
+//   )
+  
+//   {
+//     await Application.updateOne(
+//       { _id: payment.application, applicationFeePaid: false },
+//       { applicationFeePaid: true, applicationFeePaidAt: new Date() }
+//     );
+//   }
+// };
+
+
+export const markApplicationPaid = async (payment) => {
+  if (payment.status !== "success" || !payment.application) return;
+ 
+  const now = new Date();
+ 
+  if (payment.feeCode === "APPLICATION_FEE") {
     await Application.updateOne(
       { _id: payment.application, applicationFeePaid: false },
-      { applicationFeePaid: true, applicationFeePaidAt: new Date() }
+      { applicationFeePaid: true, applicationFeePaidAt: now }
+    );
+  }
+ 
+  if (payment.feeCode === "ACCEPTANCE_FEE") {
+    await Application.updateOne(
+      { _id: payment.application, acceptanceFeePaid: false },
+      { acceptanceFeePaid: true, acceptanceFeePaidAt: now }
     );
   }
 };
+
+
+/* -----------------------------------------------------
+   2. START ACCEPTANCE FEE PAYMENT
+      POST /api/payments/acceptance-fee/:applicationId
+----------------------------------------------------- */
+export const initializeAcceptanceFeePayment = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { student } = await getStudent(req);
+ 
+    const application = await Application.findById(applicationId);
+ 
+    if (!application) {
+      throw new HttpError(404, "Application not found");
+    }
+ 
+    if (String(application.user) !== String(student._id)) {
+      throw new HttpError(403, "This is not your application");
+    }
+ 
+    // Only approved applications can pay the acceptance fee
+    if (application.status !== "Approved") {
+      throw new HttpError(
+        400,
+        "Your application must be approved before you can pay the acceptance fee"
+      );
+    }
+ 
+    if (application.acceptanceFeePaid) {
+      throw new HttpError(400, "Acceptance fee is already paid");
+    }
+ 
+    if (!student.email) {
+      throw new HttpError(400, "Add an email address to your profile first");
+    }
+ 
+    // The server decides the amount, never the browser
+    const acceptanceFee = application.acceptanceFee || 40000;
+ 
+    const session = await getSession(student);
+ 
+    const reference = `ACC-${Date.now()}-${crypto
+      .randomBytes(4)
+      .toString("hex")}`;
+ 
+    await Payment.create({
+      student: student._id,
+      application: application._id,
+      feeCode: "ACCEPTANCE_FEE",
+      title: `Acceptance Fee - ${application.applicationNumber}`,
+      amount: acceptanceFee,
+      reference,
+      session: session.name,
+      semester: session.semester,
+    });
+ 
+    const data = await paystack("/transaction/initialize", {
+      method: "POST",
+      body: JSON.stringify({
+        email: student.email,
+        amount: acceptanceFee * 100, // Naira -> kobo
+        currency: "NGN",
+        reference,
+        callback_url: `${process.env.FRONTEND_URL}/student/dashboard/payment/callback`,
+        metadata: {
+          studentId: String(student._id),
+          applicationId: String(application._id),
+          feeCode: "ACCEPTANCE_FEE",
+          type: "acceptance",
+        },
+      }),
+    });
+ 
+    res.status(200).json({
+      success: true,
+      authorizationUrl: data.authorization_url,
+      reference,
+    });
+  } catch (error) {
+    sendError(res, error);
+  }
+};
+
 export const initializeApplicationFeePayment = async (req, res) => {
   try {
     const { applicationId } = req.params;

@@ -4,8 +4,8 @@ import CourseAllocation from
 import Course from
   "../models/Course.js";
 
-import Programme from
-  "../models/Programme.js";
+import Department from
+  "../models/Department.js";
 
 import AcademicSession from
   "../models/AcademicSession.js";
@@ -190,8 +190,7 @@ export const assignCourse = async (
       await CourseAllocation.create({
         staff,
         course,
-        programme:
-          selectedCourse.programme,
+       department: selectedCourse.department, 
         level:
           selectedCourse.level,
         semester:
@@ -214,7 +213,7 @@ export const assignCourse = async (
           "code title"
         )
         .populate(
-          "programme",
+          "department",
           "name code"
         )
         .populate(
@@ -353,7 +352,7 @@ export const getCourseAllocations =
             "code title"
           )
           .populate(
-            "programme",
+            "department",
             "name code"
           )
           .populate(
@@ -423,7 +422,7 @@ export const getMyCourseAllocations = async (req, res) => {
         "code title credits"
       )
       .populate(
-        "programme",
+        "department",
         "name code"
       )
       .populate(
@@ -499,7 +498,7 @@ export const getCourseAllocationById = async (req, res) => {
     const allocation = await CourseAllocation.findById(id)
       .populate("staff", "firstName lastName name username email")
       .populate("course", "code title credits level semester")
-      .populate("programme", "name code")
+      .populate("department", "name code")
       .populate("academicSession", "name currentSemester isActive startDate endDate");
 console.log("academicSession:", allocation.academicSession);
 console.log("ref used:", CourseAllocation.schema.path("academicSession").options.ref);
@@ -540,7 +539,7 @@ export const updateCourseAllocation =
             "code title"
           )
           .populate(
-            "programme",
+            "department",
             "name code"
           )
           .populate(
