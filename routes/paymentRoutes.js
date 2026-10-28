@@ -5,6 +5,8 @@ import {
   getPaymentStatus,
   initializePayment,
   verifyPayment,
+  verifyApplicationFeePayment,
+  initializeApplicationFeePayment
 } from "../controller/paymentController.js";
 
 import protect from "../middleware/authMiddleware.js";
@@ -14,6 +16,17 @@ const router = express.Router();
 router.get("/status", protect, getPaymentStatus);
 
 router.post("/initialize", protect, initializePayment);
+router.post(
+  "/application-fee/:applicationId",
+  protect,
+  initializeApplicationFeePayment
+);
+
+router.get(
+  "/application-fee/verify/:reference",
+  protect,
+  verifyApplicationFeePayment
+);
 
 router.get("/verify/:reference", protect, verifyPayment);
 

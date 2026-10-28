@@ -9,7 +9,11 @@ const paymentSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-
+application: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Application",
+  index: true,
+},
     // e.g. "TUITION", "MEDICAL", "ACCEPTANCE" (see services/feeService.js)
     feeCode: {
       type: String,
