@@ -34,17 +34,30 @@ export const getMe = async (req, res) => {
 export const register = async (req, res) => {
   try {
     const { role, sessionId, ...userData } = req.body;
-    const { username, password } = userData;
+    const { username, password, email, department } = userData;
 
+    // ============ VALIDATE ROLE ============
     if (!["admin", "staff", "student"].includes(role)) {
       return res.status(400).json({ error: "Invalid role" });
     }
 
+    // ============ CHECK FOR DUPLICATE EMAIL ============
+    if (email) {
+      const existingEmail = await User.findOne({ 
+        email: email.toLowerCase() 
+      }).exec();
+      if (existingEmail) {
+        return res.status(400).json({ error: "Email already registered" });
+      }
+    }
+
+    // ============ CHECK FOR DUPLICATE USERNAME ============
     const existingUser = await User.findOne({ username }).exec();
     if (existingUser) {
       return res.status(400).json({ error: "Username already exists" });
     }
 
+    // ============ GET & VALIDATE SESSION ============
     let session;
 
     if (role === "student") {
@@ -64,19 +77,35 @@ export const register = async (req, res) => {
       }
     }
 
+    // ============ VALIDATE DEPARTMENT FOR STUDENTS ============
+    let departmentDoc = null;
+    if (role === "student") {
+      if (!department) {
+        return res.status(400).json({ error: "Department is required for students" });
+      }
+      departmentDoc = await Department.findById(department).exec();
+      if (!departmentDoc) {
+        return res.status(400).json({ error: "Invalid department selected" });
+      }
+    }
+
+    // ============ HASH PASSWORD & CREATE USER ============
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
       role,
       ...userData,
+      email: email ? email.toLowerCase() : undefined,
       password: hashedPassword,
+      department: departmentDoc ? departmentDoc._id : undefined,
       session: [session._id],
     });
 
     await user.save();
     console.log("[register] User created:", user._id.toString(), "role:", role);
 
-    let application;
+    // ============ CREATE APPLICATION FOR STUDENT ============
+    let application = null;
     if (role === "student") {
       console.log("[register] Creating Application for student...");
       const year = new Date().getFullYear();
@@ -92,21 +121,53 @@ export const register = async (req, res) => {
         applicationNumber,
         department: departmentDoc._id,
       });
-      console.log("[register] Application created:", application._id.toString(), applicationNumber);
+      console.log(
+        "[register] Application created:",
+        application._id.toString(),
+        applicationNumber
+      );
     } else {
       console.log("[register] Skipped Application creation — role is", role);
     }
 
+    // ============ GENERATE JWT TOKEN ============
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "12h" }
     );
 
-    return res.status(201).json({ token, user, application });
+    // ============ RETURN SUCCESS RESPONSE ============
+    return res.status(201).json({
+      success: true,
+      message: "Account created successfully",
+      token,
+      user,
+      application,
+    });
   } catch (error) {
     console.error("[register] Registration error:", error);
-    return res.status(500).json({ error: "Registration failed" });
+
+    // ============ HANDLE MONGODB DUPLICATE KEY ERRORS ============
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({
+        error: `This ${field} is already registered`,
+      });
+    }
+
+    // ============ HANDLE OTHER VALIDATION ERRORS ============
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors)
+        .map((err) => err.message)
+        .join(", ");
+      return res.status(400).json({ error: messages });
+    }
+
+    // ============ HANDLE GENERIC ERRORS ============
+    return res.status(500).json({
+      error: "Registration failed. Please try again.",
+    });
   }
 };
 export const login = async (req, res) => {
