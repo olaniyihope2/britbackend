@@ -5,9 +5,16 @@ import CourseRegistration from "../models/CourseRegistration.js";
 import { CA_MAX, EXAM_MAX, computeGPA } from "../utils/grading.js";
 import { normalizeSemester } from "../utils/semester.js";
 
-const STUDENT_FIELDS = "firstName lastName username matricNumber";
+// const STUDENT_FIELDS = "firstName lastName username matricNumber";
+// const SEMESTER_MESSAGE =
+//   "This course is not in the current semester. Results can only be entered for the current semester.";
+const STUDENT_FIELDS = "studentName username matricNo";
 const SEMESTER_MESSAGE =
   "This course is not in the current semester. Results can only be entered for the current semester.";
+
+/* ------------------------------------------------------------------ */
+/* HELPERS                                                             */
+/* ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ */
 /* HELPERS                                                             */
@@ -16,9 +23,8 @@ const SEMESTER_MESSAGE =
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 const idOf = (ref) => ref?._id ?? ref;
 
-const displayName = (u) =>
-  [u?.firstName, u?.lastName].filter(Boolean).join(" ") || u?.username || "Unknown";
-
+const displayName = (u) => u?.studentName || u?.username || "Unknown";
+const matricOf = (u) => u?.matricNo || "";
 const canManage = (allocation, req) =>
   req.isAdmin || String(allocation.staff) === String(req.user.userId);
 
@@ -65,11 +71,15 @@ const loadAllocation = async (allocationId, req, res) => {
 // Students registered for this course in this session and semester.
 // Map of studentId -> student user document.
 const getRegisteredStudents = async (allocation) => {
+  const semester = normalizeSemester(allocation.semester); // "First" | "Second"
+  const sessionName = allocation.academicSession?.name;    // "2026/2027"
+  if (!semester || !sessionName) return new Map();
+
   const registrations = await CourseRegistration.find({
     status: "Registered",
-    session: idOf(allocation.academicSession),
-    semester: allocation.semester,
-    "courses.course": idOf(allocation.course),
+    session: sessionName,                                  // stored as a string
+    semester: { $in: [semester, `${semester} Semester`] }, // stored as "First Semester"
+    courses: idOf(allocation.course),                      // courses is a plain ObjectId array
   }).populate("student", STUDENT_FIELDS);
 
   const map = new Map();
