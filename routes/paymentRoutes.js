@@ -7,7 +7,8 @@ import {
   verifyPayment,
   verifyApplicationFeePayment,
   initializeApplicationFeePayment,
-  initializeAcceptanceFeePayment
+  initializeAcceptanceFeePayment,
+  initializeBatchPayment
 } from "../controller/paymentController.js";
 
 import protect from "../middleware/authMiddleware.js";
@@ -22,6 +23,7 @@ router.post(
   protect,
   initializeApplicationFeePayment
 );
+router.post("/initialize-batch", protect, initializeBatchPayment);
 router.post("/acceptance-fee/:applicationId", protect, initializeAcceptanceFeePayment);
 
 router.get(

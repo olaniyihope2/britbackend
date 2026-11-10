@@ -8,7 +8,7 @@ import {
 } from "../utils/studentContext.js";
 import { getFeeStatus } from "../services/feeService.js";
 import { reconcilePendingPayments } from "../services/paystackService.js";
-
+import { getApplicationGate } from "../utils/applicationGate.js";
 const formatCourse = (course) => ({
   id: course._id,
   code: course.code,
@@ -37,7 +37,7 @@ export const getRegistrationCourses = async (req, res) => {
 
     // ✅ FIXED: Changed from student.programme._id to student.department._id
     if (!student.department) {
-      throw new HttpError(400, "Your department has not been set. Please contact the admin office.");
+      throw new HttpError(400, "Your department has not been set. Please contact the admin office - registrar@britishpoly.edu.ng");
     }
 
     console.log("🔍 [getRegistrationCourses] Student department:", student.department);
@@ -60,21 +60,36 @@ export const getRegistrationCourses = async (req, res) => {
     }).populate("courses");
 
     await reconcilePendingPayments(student._id);
-    const fees = await getFeeStatus(student, session);
+    // const fees = await getFeeStatus(student, session);
+const tuitionFees = await getFeeStatus(student, session);
+const gate = await getApplicationGate(student._id, session._id);
 
-    res.status(200).json({
-      success: true,
-      student: {
-        name: student.studentName || student.username,
-        department: student.department.name,  // ✅ CHANGED: programme → department
-        level,
-      },
-      session: session.name,
-      semester: session.semester,
-      courses: courses.map(formatCourse),
-      registration: formatRegistration(registration),
-      fees,
-    });
+
+const fees = {
+  ...tuitionFees,
+  items: [...gate.items, ...tuitionFees.items],
+  eligible: gate.eligible && tuitionFees.eligible,
+  reason: gate.eligible
+    ? tuitionFees.eligible
+      ? ""
+      : "Pay your required tuition fees before registering courses."
+    : gate.reason,
+  outstandingNow: gate.outstanding + (tuitionFees.outstandingNow ?? 0),
+};
+
+res.status(200).json({
+  success: true,
+  student: {
+    name: student.studentName || student.username,
+    department: student.department.name,
+    level,
+  },
+  session: session.name,
+  semester: session.semester,
+  courses: courses.map(formatCourse),
+  registration: formatRegistration(registration),
+  fees,
+});
   } catch (error) {
     console.error("❌ [getRegistrationCourses] ERROR:", error.message);
     sendError(res, error);
@@ -104,16 +119,20 @@ export const submitRegistration = async (req, res) => {
     }
 
     // The fee check happens here on the server, so it can't be skipped
-    await reconcilePendingPayments(student._id);
-    const fees = await getFeeStatus(student, session);
+ await reconcilePendingPayments(student._id);
+const tuitionFees = await getFeeStatus(student, session);
+const gate = await getApplicationGate(student._id, session._id);
 
-    if (!fees.eligible) {
-      throw new HttpError(
-        403,
-        "Please pay all required fees before registering your courses."
-      );
-    }
+if (!gate.eligible) {
+  throw new HttpError(403, gate.reason);
+}
 
+if (!tuitionFees.eligible) {
+  throw new HttpError(
+    403,
+    "Please pay all required fees before registering your courses."
+  );
+}
     const filter = {
       student: student._id,
       session: session.name,

@@ -1,3 +1,37 @@
+// import mongoose from "mongoose";
+
+// const courseMaterialSchema = new mongoose.Schema(
+//   {
+//     allocation: { type: mongoose.Schema.Types.ObjectId, ref: "CourseAllocation", required: true, index: true },
+//     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true, index: true },
+//     uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
+//     title: { type: String, required: true, trim: true },
+//      semester: {
+//       type: String,
+//       enum: ["First", "Second"],
+//       required: true,
+//       default: "First",
+//     },
+//     description: { type: String, trim: true, default: "" },
+//     category: {
+//       type: String,
+//       enum: [
+//         "Lecture Note", "Lecture Slides", "Assignment", "Reading Material",
+//         "Video", "Past Question", "Reference Material", "Other",
+//       ],
+//       default: "Lecture Note",
+//     },
+
+//     originalName: { type: String, required: true },
+//     fileKey: { type: String, required: true }, // S3 object key
+//     mimeType: { type: String },
+//     size: { type: Number },
+//   },
+//   { timestamps: true }
+// );
+
+// export default mongoose.model("CourseMaterial", courseMaterialSchema);
 import mongoose from "mongoose";
 
 const courseMaterialSchema = new mongoose.Schema(
@@ -7,7 +41,7 @@ const courseMaterialSchema = new mongoose.Schema(
     uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
     title: { type: String, required: true, trim: true },
-     semester: {
+    semester: {
       type: String,
       enum: ["First", "Second"],
       required: true,
@@ -23,12 +57,20 @@ const courseMaterialSchema = new mongoose.Schema(
       default: "Lecture Note",
     },
 
-    originalName: { type: String, required: true },
-    fileKey: { type: String, required: true }, // S3 object key
+    // File is optional: a material can be typed text only, a file only, or both
+    originalName: { type: String },
+    fileKey: { type: String }, // S3 object key, never sent to the browser
     mimeType: { type: String },
     size: { type: Number },
   },
   { timestamps: true }
 );
+
+courseMaterialSchema.pre("validate", function (next) {
+  if (!this.fileKey && !(this.description || "").trim()) {
+    this.invalidate("description", "Add a description or attach a file");
+  }
+  next();
+});
 
 export default mongoose.model("CourseMaterial", courseMaterialSchema);

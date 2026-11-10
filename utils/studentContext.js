@@ -69,7 +69,7 @@ export const getStudent = async (req, { requireAcademic = false } = {}) => {
     if (!level) {
       throw new HttpError(
         400,
-        "Your level has not been set. Please contact the admin office."
+        "Your level has not been set. Please contact the admin office - registrar@britishpoly.edu.ng"
       );
     }
   }

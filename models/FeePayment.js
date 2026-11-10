@@ -14,6 +14,7 @@ application: {
   ref: "Application",
   index: true,
 },
+batchReference: { type: String, index: true, default: null },
     // e.g. "TUITION", "MEDICAL", "ACCEPTANCE" (see services/feeService.js)
     feeCode: {
       type: String,
