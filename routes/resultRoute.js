@@ -11,6 +11,10 @@ import {
   returnResults,
   publishResults,
   unpublishResults,
+  getMyPublishedResults,
+  getStudentStatement,
+  getAdminDepartments,
+  getDepartmentStudents
 } from "../controller/resultController.js";
 
 const router = express.Router();
@@ -21,6 +25,7 @@ const requireAdmin = (req, res, next) =>
 
 // Student
 router.get("/my", authenticateUser, getMyResults);
+router.get("/my-published", authenticateUser, getMyPublishedResults);
 
 // Lecturer (own course) and admin
 router.get("/allocation/:allocationId", authenticateUser, flagAdmin, getAllocationResults);
@@ -29,6 +34,10 @@ router.post("/allocation/:allocationId/submit", authenticateUser, flagAdmin, sub
 
 // Admin only
 router.get("/review", authenticateUser, flagAdmin, requireAdmin, getReviewSummary);
+// Admin only
+router.get("/admin/departments", authenticateUser, flagAdmin, requireAdmin, getAdminDepartments);
+router.get("/admin/students", authenticateUser, flagAdmin, requireAdmin, getDepartmentStudents);
+router.get("/admin/student-statement", authenticateUser, flagAdmin, requireAdmin, getStudentStatement);
 router.post("/allocation/:allocationId/approve", authenticateUser, flagAdmin, requireAdmin, approveResults);
 router.post("/allocation/:allocationId/return", authenticateUser, flagAdmin, requireAdmin, returnResults);
 router.post("/allocation/:allocationId/publish", authenticateUser, flagAdmin, requireAdmin, publishResults);

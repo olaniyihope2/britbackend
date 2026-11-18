@@ -11,6 +11,7 @@ import examlistRoute from "./routes/examlistRoute.js";
 import courseMaterialRoute   from "./routes/courseMaterialRoute.js";
 import credentialRoute from "./routes/credentialRoute.js";
 import liveClassRoute from "./routes/liveClassRoute.js";
+import resultReviewRoute from "./routes/resultReviewRoutes.js";
 import quizRoute from "./routes/quizRoute.js";  
 import resultRoute from "./routes/resultRoute.js";
 import assignmentRoute from "./routes/assignmentRoute.js";
@@ -145,6 +146,7 @@ app.use(
 app.use("/api/course-materials", courseMaterialRoute);
 app.use("/api", credentialRoute);
 app.use("/api/results", resultRoute);
+app.use("/api/results", resultReviewRoute);
 app.use("/api/", offlineRoute);
 app.use("/api/ad", adRoutes);
 app.use("/api/", examlistRoute);

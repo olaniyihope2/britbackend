@@ -4,6 +4,9 @@ import CourseAllocation from "../models/CourseAllocation.js";
 import CourseRegistration from "../models/CourseRegistration.js";
 import { CA_MAX, EXAM_MAX, computeGPA } from "../utils/grading.js";
 import { normalizeSemester } from "../utils/semester.js";
+import User from "../models/userModel.js";
+import Department from "../models/Department.js";
+import Session from "../models/sessionModel.js";
 
 // const STUDENT_FIELDS = "firstName lastName username matricNumber";
 // const SEMESTER_MESSAGE =
@@ -116,7 +119,7 @@ export const getAllocationResults = async (req, res) => {
     ]);
 
     const rowByStudent = new Map(rows.map((r) => [String(idOf(r.student)), r]));
-
+const returnNote = rows.find((r) => r.returnReason)?.returnReason || "";
     // Registered students with no row yet appear as "not_entered"
     const pending = [...registered.entries()]
       .filter(([sid]) => !rowByStudent.has(sid))
@@ -150,6 +153,7 @@ export const getAllocationResults = async (req, res) => {
         session: allocation.academicSession?.name,
         level: allocation.level,
         editable: isCurrentSemester(allocation),
+         returnNote,
       },
       students,
       summary,
@@ -157,6 +161,47 @@ export const getAllocationResults = async (req, res) => {
   } catch (error) {
     console.error("Get allocation results error:", error);
     return res.status(500).json({ message: "Failed to load results." });
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* STUDENT: my published results                                       */
+/* GET /results/my-published                                           */
+/* ------------------------------------------------------------------ */
+export const getMyPublishedResults = async (req, res) => {
+  try {
+    const rows = await Result.find({
+      student: req.user.userId,
+      status: "published",
+    })
+      .populate("course", "code title")
+      .populate("academicSession", "name")
+      .sort({ publishedAt: -1 })
+      .lean();
+
+    const results = rows
+      .map((r) => ({
+        id: String(r._id),
+        courseCode: r.course?.code || "—",
+        courseTitle: r.course?.title || "Untitled course",
+        session: r.academicSession?.name || "",
+        semester: r.semester || "",
+        level: r.level || "",
+        creditUnits: r.creditUnits ?? 0,
+        caScore: r.caScore ?? null,
+        examScore: r.examScore ?? null,
+        total: r.total ?? null,
+        grade: r.grade ?? null,
+        gradePoint: r.gradePoint ?? null,
+        comment: r.comment || "",
+        publishedAt: r.publishedAt,
+      }))
+      .sort((a, b) => a.courseCode.localeCompare(b.courseCode));
+
+    return res.status(200).json({ results });
+  } catch (error) {
+    console.error("My published results error:", error);
+    return res.status(500).json({ message: "Failed to load your results." });
   }
 };
 
@@ -489,5 +534,236 @@ export const getMyResults = async (req, res) => {
   } catch (error) {
     console.error("Get my results error:", error);
     return res.status(500).json({ message: "Failed to load your results." });
+  }
+};
+
+const summarize = (rows) => {
+  const unitsAttempted = rows.reduce((sum, r) => sum + (r.creditUnits || 0), 0);
+  const weightedGradePoints = rows.reduce(
+    (sum, r) => sum + (r.gradePoint || 0) * (r.creditUnits || 0),
+    0
+  );
+  const unitsPassed = rows
+    .filter((r) => r.grade && r.grade !== "F")
+    .reduce((sum, r) => sum + (r.creditUnits || 0), 0);
+
+  return {
+    unitsAttempted,
+    unitsPassed,
+    weightedGradePoints: Number(weightedGradePoints.toFixed(2)),
+    gpa: unitsAttempted ? Number((weightedGradePoints / unitsAttempted).toFixed(2)) : 0,
+  };
+};
+
+const SEMESTER_ORDER = { First: 1, Second: 2 };
+
+/* ADMIN: a student's published statement of results */
+// export const getStudentStatement = async (req, res) => {
+//   try {
+//     const { studentId, matricNo } = req.query;
+
+//     let filter;
+//     if (isValidId(studentId)) {
+//       filter = { _id: studentId };
+//     } else if (matricNo && String(matricNo).trim()) {
+//       filter = { matricNo: String(matricNo).trim() };
+//     } else {
+//       return res.status(400).json({ message: "Choose a student." });
+//     }
+
+//     const student = await User.findOne(filter)
+//       .select("studentName username matricNo email")
+//       .lean();
+
+//     if (!student) {
+//       return res.status(404).json({ message: "Student not found." });
+//     }
+
+//     const rows = await Result.find({ student: student._id, status: "published" })
+//       .populate("course", "code title")
+//       .populate("academicSession", "name")
+//       .lean();
+
+
+//     const groups = new Map();
+//     for (const r of rows) {
+//       const session = r.academicSession?.name || "—";
+//       const key = `${session}|${r.semester}`;
+//       if (!groups.has(key)) {
+//         groups.set(key, { session, semester: r.semester, level: r.level || "", rows: [] });
+//       }
+//       groups.get(key).rows.push(r);
+//     }
+
+//     const semesters = [...groups.values()]
+//       .sort(
+//         (a, b) =>
+//           a.session.localeCompare(b.session) ||
+//           (SEMESTER_ORDER[a.semester] ?? 9) - (SEMESTER_ORDER[b.semester] ?? 9)
+//       )
+//       .map((g) => ({
+//         session: g.session,
+//         semester: g.semester,
+//         level: g.level,
+//         rows: g.rows
+//           .map((r) => ({
+//             courseCode: r.course?.code || "—",
+//             courseTitle: r.course?.title || "Untitled course",
+//             units: r.creditUnits ?? 0,
+//             total: r.total ?? null,
+//             grade: r.grade ?? null,
+//             weightedGradePoints: Number(((r.gradePoint || 0) * (r.creditUnits || 0)).toFixed(2)),
+//           }))
+//           .sort((a, b) => a.courseCode.localeCompare(b.courseCode)),
+//         summary: summarize(g.rows),
+//       }));
+
+//     return res.status(200).json({
+//       student: {
+//         name: student.studentName || student.username || "Unknown student",
+//         matricNumber: student.matricNo,
+//         email: student.email || "",
+//       },
+//       semesters,
+//       cumulative: summarize(rows),
+//     });
+//   } catch (error) {
+//     console.error("Student statement error:", error);
+//     return res.status(500).json({ message: "Failed to load the statement." });
+//   }
+// };
+
+/* ADMIN: a student's published statement for one session and semester */
+export const getStudentStatement = async (req, res) => {
+  try {
+    const { studentId, matricNo, sessionId } = req.query;
+    const semester = normalizeSemester(req.query.semester);
+
+    if (!isValidId(sessionId)) {
+      return res.status(400).json({ message: "Choose a session." });
+    }
+    if (!semester) {
+      return res.status(400).json({ message: "Choose a semester." });
+    }
+
+    let filter;
+    if (isValidId(studentId)) {
+      filter = { _id: studentId };
+    } else if (matricNo && String(matricNo).trim()) {
+      filter = { matricNo: String(matricNo).trim() };
+    } else {
+      return res.status(400).json({ message: "Choose a student." });
+    }
+
+    const [student, session] = await Promise.all([
+      User.findOne(filter).select("studentName username matricNo email").lean(),
+      Session.findById(sessionId).select("name").lean(),
+    ]);
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+    if (!session) {
+      return res.status(404).json({ message: "Session not found." });
+    }
+
+    const allRows = await Result.find({ student: student._id, status: "published" })
+      .populate("course", "code title")
+      .populate("academicSession", "name")
+      .lean();
+
+    // Results for the selected session and semester only
+    const currentRows = allRows.filter(
+      (r) => String(r.academicSession?._id) === String(sessionId) && r.semester === semester
+    );
+
+    // Cumulative covers published results up to and including the selected semester.
+    // Session names are "YYYY/YYYY", so string comparison orders them correctly.
+    const cumulativeRows = allRows.filter((r) => {
+      const name = r.academicSession?.name || "";
+      if (name !== session.name) return name < session.name;
+      return (SEMESTER_ORDER[r.semester] ?? 9) <= SEMESTER_ORDER[semester];
+    });
+
+    const semesters = currentRows.length
+      ? [
+          {
+            session: session.name,
+            semester,
+            level: currentRows[0].level || "",
+            rows: currentRows
+              .map((r) => ({
+                courseCode: r.course?.code || "—",
+                courseTitle: r.course?.title || "Untitled course",
+                units: r.creditUnits ?? 0,
+                total: r.total ?? null,
+                grade: r.grade ?? null,
+                weightedGradePoints: Number(((r.gradePoint || 0) * (r.creditUnits || 0)).toFixed(2)),
+              }))
+              .sort((a, b) => a.courseCode.localeCompare(b.courseCode)),
+            summary: summarize(currentRows),
+          },
+        ]
+      : [];
+
+    return res.status(200).json({
+      student: {
+        name: student.studentName || student.username || "Unknown student",
+        matricNumber: student.matricNo,
+        email: student.email || "",
+      },
+      semesters,
+      cumulative: summarize(cumulativeRows),
+    });
+  } catch (error) {
+    console.error("Student statement error:", error);
+    return res.status(500).json({ message: "Failed to load the statement." });
+  }
+};
+/* ADMIN: departments for the filter dropdown */
+export const getAdminDepartments = async (req, res) => {
+  try {
+    const departments = await Department.find({})
+      .select("name code")
+      .sort({ name: 1 })
+      .lean();
+
+    return res.status(200).json({
+      departments: departments.map((d) => ({
+        id: String(d._id),
+        name: d.name,
+        code: d.code || "",
+      })),
+    });
+  } catch (error) {
+    console.error("Admin departments error:", error);
+    return res.status(500).json({ message: "Failed to load departments." });
+  }
+};
+
+/* ADMIN: students in one department */
+export const getDepartmentStudents = async (req, res) => {
+  try {
+    const { departmentId } = req.query;
+    if (!mongoose.Types.ObjectId.isValid(departmentId)) {
+      return res.status(400).json({ message: "Choose a department." });
+    }
+
+    const students = await User.find({ department: departmentId })
+      .select("studentName username matricNo email")
+      .sort({ studentName: 1 })
+      .lean();
+
+    return res.status(200).json({
+      students: students.map((s) => ({
+        id: String(s._id),
+        name: s.studentName || s.username || "Unknown student",
+        matricNumber: s.matricNo || "—",
+        email: s.email || "",
+      })),
+    });
+  } catch (error) {
+    console.error("Department students error:", error);
+    return res.status(500).json({ message: "Failed to load students." });
   }
 };
