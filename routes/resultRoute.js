@@ -14,7 +14,8 @@ import {
   getMyPublishedResults,
   getStudentStatement,
   getAdminDepartments,
-  getDepartmentStudents
+  getDepartmentStudents,
+  getMyStatement
 } from "../controller/resultController.js";
 
 const router = express.Router();
@@ -36,6 +37,7 @@ router.post("/allocation/:allocationId/submit", authenticateUser, flagAdmin, sub
 router.get("/review", authenticateUser, flagAdmin, requireAdmin, getReviewSummary);
 // Admin only
 router.get("/admin/departments", authenticateUser, flagAdmin, requireAdmin, getAdminDepartments);
+router.get("/my-statement", authenticateUser, getMyStatement);
 router.get("/admin/students", authenticateUser, flagAdmin, requireAdmin, getDepartmentStudents);
 router.get("/admin/student-statement", authenticateUser, flagAdmin, requireAdmin, getStudentStatement);
 router.post("/allocation/:allocationId/approve", authenticateUser, flagAdmin, requireAdmin, approveResults);

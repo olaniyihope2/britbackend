@@ -767,3 +767,80 @@ export const getDepartmentStudents = async (req, res) => {
     return res.status(500).json({ message: "Failed to load students." });
   }
 };
+
+/* STUDENT: my statement for one session and semester */
+export const getMyStatement = async (req, res) => {
+  try {
+    const { sessionId } = req.query;
+    const semester = normalizeSemester(req.query.semester);
+
+    if (!isValidId(sessionId)) {
+      return res.status(400).json({ message: "Choose a session." });
+    }
+    if (!semester) {
+      return res.status(400).json({ message: "Choose a semester." });
+    }
+
+    const [student, session] = await Promise.all([
+      User.findById(req.user.userId).select("studentName username matricNo email").lean(),
+      Session.findById(sessionId).select("name").lean(),
+    ]);
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+    if (!session) {
+      return res.status(404).json({ message: "Session not found." });
+    }
+
+    const allRows = await Result.find({ student: student._id, status: "published" })
+      .populate("course", "code title")
+      .populate("academicSession", "name")
+      .lean();
+
+    const currentRows = allRows.filter(
+      (r) => String(r.academicSession?._id) === String(sessionId) && r.semester === semester
+    );
+
+    const cumulativeRows = allRows.filter((r) => {
+      const name = r.academicSession?.name || "";
+      if (name !== session.name) return name < session.name;
+      return (SEMESTER_ORDER[r.semester] ?? 9) <= SEMESTER_ORDER[semester];
+    });
+
+    const semesters = currentRows.length
+      ? [
+          {
+            session: session.name,
+            semester,
+            level: currentRows[0].level || "",
+            rows: currentRows
+              .map((r) => ({
+                courseCode: r.course?.code || "—",
+                courseTitle: r.course?.title || "Untitled course",
+                units: r.creditUnits ?? 0,
+                total: r.total ?? null,
+                grade: r.grade ?? null,
+                weightedGradePoints: Number(((r.gradePoint || 0) * (r.creditUnits || 0)).toFixed(2)),
+              }))
+              .sort((a, b) => a.courseCode.localeCompare(b.courseCode)),
+            summary: summarize(currentRows),
+          },
+        ]
+      : [];
+
+    return res.status(200).json({
+      student: {
+        name: student.studentName || student.username || "Unknown student",
+        matricNumber: student.matricNo || "",
+        email: student.email || "",
+      },
+      period: { session: session.name, semester },
+      semesters,
+      cumulative: summarize(cumulativeRows),
+    });
+  } catch (error) {
+    console.error("My statement error:", error);
+    return res.status(500).json({ message: "Failed to load your statement." });
+  }
+};
